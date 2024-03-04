@@ -1,0 +1,12 @@
+{{#each disc_search_results}}
+<tr>
+    <td>{{this.id}}</td>
+    <td><img src="{{this.cover_medium}}" /></td>
+    <td>{{this.title}}</td>
+    <td>{{this.type}}</td>
+    <td>{{this.artist.name}}<br><img src="{{this.artist.picture_small}}"></td>
+    <td><button hx-post="/api/owned-discs" hx-vals='{ "title" : "{{this.title}}",  "cover" : "{{this.cover_medium}}", "artist" : {
+        "name" : "{{this.artist.name}}", "picture" : "{{this.artist.picture_small}}" }}' hx-ext="json-enc">Ajouter à ma
+            collection</button></td>
+</tr>
+{{/each}}

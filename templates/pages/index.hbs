@@ -1,0 +1,24 @@
+<html>
+<script src="https://unpkg.com/htmx.org@1.9.10"
+  integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+
+<head>
+  <title>Ma collection de disques</title>
+</head>
+
+<body>
+  <h1>Recherche</h1>
+  <span class="htmx-indicator">
+    Searching...
+  </span>
+
+  <button hx-get="views/search" hx-trigger="click" hx-target="#main-panel">Recherche</button> <button
+    hx-get="views/collection" hx-trigger="click" hx-target="#main-panel">Collection</button>
+
+  <divv id="main-panel">
+    {{> recherche}}
+    </div>
+</body>
+
+</html>

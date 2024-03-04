@@ -1,0 +1,12 @@
+<h2>Ma collection : </h2>
+
+<table>
+    {{#each owned_discs}}
+    <tr>
+        <td><img src="{{this.cover}}" /></td>
+        <td>{{this.title}}</td>
+        <td>{{this.artist.name}}<br><img src="{{this.artist.picture_small}}"></td>
+        <td><button hx-delete="/api/owned-discs/{{this.title}}">Retirer de ma collection</button></td>
+    </tr>
+    {{/each}}
+</table>
