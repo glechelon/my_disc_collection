@@ -1,8 +1,10 @@
-use actix_web::web::{self, Data};
+use actix_web::web::Data;
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
 
 use crate::collection::owned_disc::*;
+
+const CREATE_DISC_STATEMENT : &str = "INSERT INTO DISC(TITLE, COVER, ARTIST_ID) VALUES(?1, ?2, ?3)";
 
 pub fn retrieve_owned_discs(
     db_connection_pool: Data<Pool<SqliteConnectionManager>>,
@@ -98,7 +100,7 @@ pub fn create_disc(db_connection_pool: &Data<Pool<SqliteConnectionManager>>, dis
         .get()
         .expect("Erreur à la récupération d'une connexion dans le pool");
     connection
-        .prepare("INSERT INTO DISC(TITLE, COVER, ARTIST_ID) VALUES(?1, ?2, ?3)")
+        .prepare(CREATE_DISC_STATEMENT)
         .and_then(|mut statement| statement.execute((&disc.title, &disc.cover, &artist_id)))
         .expect("Erreur lors de la création du disque");
 }

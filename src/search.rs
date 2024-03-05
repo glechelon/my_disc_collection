@@ -4,8 +4,14 @@ use actix_web::Responder;
 use actix_web::{get, web, HttpRequest};
 use handlebars::Handlebars;
 use qstring::QString;
+use r2d2::Pool;
+use r2d2_sqlite::SqliteConnectionManager;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::collections::VecDeque;
+
+use crate::retrieve_owned_discs;
+use crate::OwnedDisc;
 
 #[derive(Deserialize, Debug)]
 struct SearchResponse {
@@ -19,9 +25,10 @@ struct SearchData {
     r#type: String,
     cover_medium: String,
     artist: SearchArtist,
+    isOwned: Option<bool>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 struct SearchArtist {
     name: String,
     picture_small: String,
@@ -41,7 +48,11 @@ async fn search(template_registry: Data<Handlebars<'static>>) -> impl Responder 
 }
 
 #[get("parts/disc-search-results")]
-async fn discs(req: HttpRequest, template_registry: Data<Handlebars<'static>>) -> impl Responder {
+async fn discs(
+    req: HttpRequest,
+    template_registry: Data<Handlebars<'static>>,
+    db_connection_pool: Data<Pool<SqliteConnectionManager>>,
+) -> impl Responder {
     dbg!(req.query_string());
     let nom_album_recherche = QString::from(req.query_string())
         .get("name")
@@ -55,12 +66,34 @@ async fn discs(req: HttpRequest, template_registry: Data<Handlebars<'static>>) -
             .text()
             .await
             .expect("Erreur lors de la lecture du résultat");
-  //  dbg!(&search_results);
     let json: SearchResponse =
         serde_json::from_str(&search_results).expect("Erreur lors de la déserialisation");
 
+    let my_collection: Vec<OwnedDisc> = retrieve_owned_discs(db_connection_pool);
+
+    let search_results = json.data
+        .iter()
+        .map(|response| SearchData {
+            id: response.id,
+            title: response.title.clone(),
+            r#type: response.r#type.clone(),
+            cover_medium: response.cover_medium.clone(),
+            artist: response.artist.clone(),
+            isOwned: (|| {
+                if my_collection.iter().any(|owned_disc| {
+                    owned_disc.title.eq(&response.title)
+                        && owned_disc.artist.name.eq(&response.artist.name)
+                }) {
+                    Some(true)
+                } else {
+                    Some(false)
+                }
+            })()
+        })
+        .collect::<Vec<SearchData>>();
+
     let mut data: HashMap<String, Vec<SearchData>> = HashMap::new();
-    data.insert("disc_search_results".to_string(), json.data);
+    data.insert("disc_search_results".to_string(), search_results);
 
     let render = template_registry
         .render("disc_search", &data)

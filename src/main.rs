@@ -15,7 +15,6 @@ use actix_web::{
 use handlebars::Handlebars;
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
-use serde::{Deserialize, Serialize};
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
