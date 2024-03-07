@@ -1,17 +1,7 @@
     <input class="form-control" type="search" name="name" placeholder="Clavecin bien tempéré..." hx-get="parts/disc-search-results"
-      hx-params="*" hx-trigger="input changed delay:500ms, name" hx-target="#search-results" hx-swap="innerHTML"
-      hx-indicator=".htmx-indicator">
+      hx-params="*" hx-trigger="refreshSearch from:body, input changed, name" hx-target="#search-results" hx-swap="innerHTML"
+      hx-indicator="#search-loader">
     <table class="table">
-      <thead>
-        <tr>
-          <th>id</th>
-          <th>Pochette</th>
-          <th>title</th>
-          <th>type</th>
-          <th>artiste</th>
-          <th></th>
-        </tr>
-      </thead>
       <tbody id="search-results">
       </tbody>
     </table>

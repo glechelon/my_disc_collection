@@ -1,3 +1,14 @@
+{{#if disc_search_results}}
+<thead>
+    <tr>
+        <th>id</th>
+        <th>Pochette</th>
+        <th>title</th>
+        <th>type</th>
+        <th>artiste</th>
+        <th></th>
+    </tr>
+</thead>
 {{#each disc_search_results}}
 <tr>
     <td>{{this.id}}</td>
@@ -6,11 +17,18 @@
     <td>{{this.type}}</td>
     <td>{{this.artist.name}}<br><img src="{{this.artist.picture_small}}"></td>
     {{#if (ne this.isOwned true)}}
-    <td><button hx-post="/api/owned-discs" hx-vals='{ "title" : "{{this.title}}",  "cover" : "{{this.cover_medium}}", "artist" : {
-        "name" : "{{this.artist.name}}", "picture" : "{{this.artist.picture_small}}" }}' hx-ext="json-enc">Ajouter à ma
-            collection</button></td>
+    <td>
+        <button hx-post="/api/owned-discs" hx-vals='{ "title" : "{{this.title}}",  "cover" : "{{this.cover_medium}}", "artist" : {
+        "name" : "{{this.artist.name}}", "picture" : "{{this.artist.picture_small}}" }}' hx-ext="json-enc"
+            hx-indicator=".ajout-en-cours">Ajouter à ma
+            collection
+        </button>
+        <span aria-busy="true" class="ajout-en-cours htmx-indicator"></span>
+
+    </td>
     {{else}}
     <td>owned</td>
     {{/if}}
 </tr>
 {{/each}}
+{{/if}}

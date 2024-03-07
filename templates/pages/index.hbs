@@ -1,24 +1,38 @@
 <html>
-<script src="https://unpkg.com/htmx.org@1.9.10"
-  integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
 
 <head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
   <title>Ma collection de disques</title>
 </head>
 
 <body>
-  <h1>Recherche</h1>
-  <span class="htmx-indicator">
-    Searching...
-  </span>
+  <header class="container">
+    <nav>
+      <ul>
+        <li><strong>Ma collection de disque</strong></li>
+      </ul>
+      <ul>
+        <li><a href="#" hx-get="views/search" hx-trigger="click" hx-target="#main-panel">Recherche</a></li>
+        <li><a href="#" hx-get="views/collection" hx-trigger="click, refreshCollection from:body"
+            hx-target="#main-panel">Collection</a></li>
+      </ul>
 
-  <button hx-get="views/search" hx-trigger="click" hx-target="#main-panel">Recherche</button> <button
-    hx-get="views/collection" hx-trigger="click" hx-target="#main-panel">Collection</button>
+    </nav>
+  </header>
+  <main class="container">
+    <span aria-busy="true" id="search-loader" class="htmx-indicator">
+    </span>
 
-  <divv id="main-panel">
-    {{> recherche}}
+
+    <div id="main-panel">
+      {{> recherche}}
     </div>
+  </main>
 </body>
 
 </html>
