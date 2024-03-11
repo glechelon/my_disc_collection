@@ -20,10 +20,9 @@
     <td>
         <button hx-post="/api/owned-discs" hx-vals='{ "title" : "{{this.title}}",  "cover" : "{{this.cover_medium}}", "artist" : {
         "name" : "{{this.artist.name}}", "picture" : "{{this.artist.picture_small}}" }}' hx-ext="json-enc"
-            hx-indicator=".ajout-en-cours">Ajouter à ma
-            collection
-        </button>
+            hx-indicator=".ajout-en-cours"><i class="fa-regular fa-plus"></i></button>
         <span aria-busy="true" class="ajout-en-cours htmx-indicator"></span>
+        <button class="pico-background-indigo-600"><i class="fa-solid fa-thumbtack"></i></button>
 
     </td>
     {{else}}

@@ -1,5 +1,5 @@
     <input class="form-control" type="search" name="name" placeholder="Clavecin bien tempéré..." hx-get="parts/disc-search-results"
-      hx-params="*" hx-trigger="refreshSearch from:body, input changed, name" hx-target="#search-results" hx-swap="innerHTML"
+      hx-params="*" hx-trigger="refreshSearch from:body, input changed delay:3, name" hx-target="#search-results" hx-swap="innerHTML"
       hx-indicator="#search-loader">
     <table class="table">
       <tbody id="search-results">
