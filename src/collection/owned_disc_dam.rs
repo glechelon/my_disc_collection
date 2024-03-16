@@ -18,7 +18,6 @@ pub fn retrieve_owned_discs(
 
     statement
         .query_map([], |row| {
-            dbg!(&row);
             Ok(OwnedDisc {
                 id: row.get(0).expect("Erreur lors de la récupération de l'id"),
                 title: row.get(1).expect("Erreur lors de la récupération du titre"),

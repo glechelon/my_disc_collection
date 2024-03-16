@@ -6,23 +6,22 @@ use crate::collection::owned_disc_dam::*;
 
 use std::collections::HashMap;
 
-use actix_web::{
-    get,
-    middleware::Logger,
-    web::Data,
-    App, HttpResponse, HttpServer, Responder,
-};
+use actix_session::storage::CookieSessionStore;
+use actix_session::SessionMiddleware;
+use actix_web::cookie::Key;
+use actix_web::{get, middleware::Logger, web::Data, App, HttpResponse, HttpServer, Responder};
 use handlebars::Handlebars;
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("debug"));
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     let db_connection_manager = SqliteConnectionManager::file("my_physical_disc_collection.db");
     let db_connection_pool =
         Pool::new(db_connection_manager).expect("Erreur lors de la création du pool de connexion");
     let mut template_registry = Handlebars::new();
+    let key = Key::from("23PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP".as_bytes());
     template_registry
         .register_template_file("index", "templates/pages/index.hbs")
         .expect("Erreur lors de la récupération du template");
@@ -38,6 +37,7 @@ async fn main() -> Result<(), std::io::Error> {
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
+            .wrap(SessionMiddleware::new(CookieSessionStore::default(), key.clone()))
             .app_data(Data::new(template_registry.clone()))
             .app_data(Data::new(db_connection_pool.clone()))
             .service(index)

@@ -18,7 +18,7 @@ pub(crate) fn configure_collection_views(config: &mut web::ServiceConfig) {
 #[get("views/collection")]
 async fn owned_discs(
     template_registry: Data<Handlebars<'static>>,
-    db_connection_pool: Data<Pool<SqliteConnectionManager>>,
+    db_connection_pool: Data<Pool<SqliteConnectionManager>>
 ) -> impl Responder {
     dbg!("test");
     let owned_discs = retrieve_owned_discs(db_connection_pool);

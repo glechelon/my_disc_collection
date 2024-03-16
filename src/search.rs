@@ -1,4 +1,7 @@
+use actix_session::Session;
+use actix_web::cookie::Cookie;
 use actix_web::web::Data;
+use actix_web::Error;
 use actix_web::HttpResponse;
 use actix_web::Responder;
 use actix_web::{get, web, HttpRequest};
@@ -8,24 +11,28 @@ use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::collections::VecDeque;
 
 use crate::retrieve_owned_discs;
 use crate::OwnedDisc;
+
+
+const CURRENT_SEARCH_STR :&str = "current-search";
+
+
 
 #[derive(Deserialize, Debug)]
 struct SearchResponse {
     data: Vec<SearchData>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 struct SearchData {
     id: i32,
     title: String,
     r#type: String,
     cover_medium: String,
     artist: SearchArtist,
-    isOwned: Option<bool>,
+    is_owned: Option<bool>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -39,11 +46,22 @@ pub(crate) fn configure_search(config: &mut web::ServiceConfig) {
 }
 
 #[get("views/search")]
-async fn search(template_registry: Data<Handlebars<'static>>) -> impl Responder {
-    let data: HashMap<String, String> = HashMap::new();
+async fn search(template_registry: Data<Handlebars<'static>>, session: Session) -> impl Responder {
+    let mut data: HashMap<String, String> = HashMap::new();
+    session
+        .get(CURRENT_SEARCH_STR)
+        .expect("Erreur lors de la récupération de la recherche actuelle dans la session")
+        .map(|current_search| {
+            data.insert(CURRENT_SEARCH_STR.to_string(), current_search)
+        });
     let render = template_registry
         .render("recherche", &data)
         .expect("Erreur lors du rendu du template");
+    if data.contains_key(CURRENT_SEARCH_STR) {
+        return HttpResponse::Ok()
+            .insert_header(("HX-Trigger-After-Settle", "refreshSearch"))
+            .body(render);
+    }
     HttpResponse::Ok().body(render)
 }
 
@@ -52,13 +70,12 @@ async fn discs(
     req: HttpRequest,
     template_registry: Data<Handlebars<'static>>,
     db_connection_pool: Data<Pool<SqliteConnectionManager>>,
-) -> impl Responder {
-    dbg!(req.query_string());
+    session: Session,
+) -> Result<HttpResponse, Error> {
     let nom_album_recherche = QString::from(req.query_string())
         .get("name")
         .expect("Erreur lors de la récupération de la requête")
         .replace(" ", "%20");
-    dbg!(&nom_album_recherche);
     let search_results =
         reqwest::get("https://api.deezer.com/search/album?q=".to_string() + &nom_album_recherche)
             .await
@@ -71,7 +88,8 @@ async fn discs(
 
     let my_collection: Vec<OwnedDisc> = retrieve_owned_discs(db_connection_pool);
 
-    let search_results = json.data
+    let search_results = json
+        .data
         .iter()
         .map(|response| SearchData {
             id: response.id,
@@ -79,7 +97,7 @@ async fn discs(
             r#type: response.r#type.clone(),
             cover_medium: response.cover_medium.clone(),
             artist: response.artist.clone(),
-            isOwned: (|| {
+            is_owned: (|| {
                 if my_collection.iter().any(|owned_disc| {
                     owned_disc.title.eq(&response.title)
                         && owned_disc.artist.name.eq(&response.artist.name)
@@ -88,16 +106,20 @@ async fn discs(
                 } else {
                     Some(false)
                 }
-            })()
+            })(),
         })
         .collect::<Vec<SearchData>>();
 
     let mut data: HashMap<String, Vec<SearchData>> = HashMap::new();
-    data.insert("disc_search_results".to_string(), search_results);
 
+    session
+        .insert("current-search", nom_album_recherche)
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    data.insert("disc_search_results".to_string(), search_results);
     let render = template_registry
         .render("disc_search", &data)
-        .expect("Erreur");
+        .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    HttpResponse::Ok().body(render)
+    Ok(HttpResponse::Ok().body(render))
 }
